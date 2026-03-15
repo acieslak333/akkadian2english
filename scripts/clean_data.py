@@ -125,14 +125,44 @@ def align_gaps(trans_text, transla_text):
     
     return trans_text, transla_text
 
-def preprocess_data(input_file, output_dir):
-    df = pd.read_csv(input_file)
-    print(f"Original data size: {len(df)}")
+def load_and_standardize(file_path, trans_col, translation_col):
+    if not os.path.exists(file_path):
+        print(f"Warning: {file_path} not found.")
+        return pd.DataFrame(columns=['transliteration', 'translation'])
     
+    df = pd.read_csv(file_path, low_memory=False)
+    # Filter for necessary columns and rename
+    df = df[[trans_col, translation_col]].rename(columns={
+        trans_col: 'transliteration',
+        translation_col: 'translation'
+    })
+    return df
+
+def preprocess_data(output_dir):
+    sources = [
+        ('data/train.csv', 'transliteration', 'translation'),
+        ('data/Sentences_Oare_FirstWord_LinNum.csv', 'sentence_obj_in_text', 'translation'),
+        ('data/eBL_Dictionary.csv', 'word', 'definition')
+    ]
+    
+    dfs = []
+    for path, trans_col, transla_col in sources:
+        print(f"Loading {path}...")
+        dfs.append(load_and_standardize(path, trans_col, transla_col))
+    
+    df = pd.concat(dfs, ignore_index=True)
+    print(f"Combined data size: {len(df)}")
+    
+    # Remove duplicates
+    df = df.drop_duplicates().reset_index(drop=True)
+    print(f"Size after deduplication: {len(df)}")
+    
+    print("Cleaning text...")
     df['transliteration'] = df['transliteration'].apply(clean_transliteration)
     df['translation'] = df['translation'].apply(clean_translation)
     
     # Gap alignment
+    print("Aligning gaps...")
     aligned = df.apply(lambda row: align_gaps(row['transliteration'], row['translation']), axis=1)
     df['transliteration'] = [a[0] for a in aligned]
     df['translation'] = [a[1] for a in aligned]
@@ -140,7 +170,10 @@ def preprocess_data(input_file, output_dir):
     # Remove empty or too short entries
     df = df[df['transliteration'].str.len() > 1]
     df = df[df['translation'].str.len() > 1]
-    print(f"Cleaned data size: {len(df)}")
+    
+    # Final deduplication after cleaning (some might become identical)
+    df = df.drop_duplicates().reset_index(drop=True)
+    print(f"Final cleaned data size: {len(df)}")
     
     # Split into train and validation (90/10)
     train_df, val_df = train_test_split(df, test_size=0.1, random_state=42)
@@ -152,14 +185,15 @@ def preprocess_data(input_file, output_dir):
     print(f"Saved {len(train_df)} training and {len(val_df)} validation samples to {output_dir}")
 
 def preprocess_test(input_file, output_dir):
+    if not os.path.exists(input_file):
+        print(f"Warning: {input_file} not found.")
+        return
     df = pd.read_csv(input_file)
     df['transliteration'] = df['transliteration'].apply(clean_transliteration)
-    # Ensure test doesn't have alignment issues by self-correction?
-    # No, we just clean it to match the expected format
     df.to_csv(os.path.join(output_dir, 'test_cleaned.csv'), index=False)
     print(f"Saved cleaned test data to {output_dir}")
 
 if __name__ == "__main__":
     os.makedirs('data/processed', exist_ok=True)
-    preprocess_data('data/train.csv', 'data/processed')
+    preprocess_data('data/processed')
     preprocess_test('data/test.csv', 'data/processed')

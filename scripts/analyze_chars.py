@@ -23,4 +23,6 @@ def analyze_chars(file_path):
     print(f"Accented characters found: {Counter(accented)}")
 
 if __name__ == "__main__":
-    analyze_chars('data/train.csv')
+    import sys
+    path = sys.argv[1] if len(sys.argv) > 1 else 'data/train.csv'
+    analyze_chars(path)
