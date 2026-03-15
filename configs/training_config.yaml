@@ -1,0 +1,30 @@
+# NLLB-200 Fine-tuning Configuration for Akkadian Translation
+
+model:
+  name: "facebook/nllb-200-distilled-600M"
+  source_lang: "eng_Latn"
+  target_lang: "eng_Latn"
+  max_length: 512
+
+data:
+  train_path: "data/processed/train_cleaned_norm.csv"
+  val_path: "data/processed/val_cleaned_norm.csv"
+  output_dir: "./models/nllb_akkadian"
+
+training:
+  learning_rate: 2.0e-5
+  num_train_epochs: 50
+  per_device_train_batch_size: 4
+  per_device_eval_batch_size: 4
+  gradient_accumulation_steps: 4
+  weight_decay: 0.01
+  eval_strategy: "steps"
+  save_strategy: "steps"
+  eval_steps: 128
+  save_steps: 128
+  save_total_limit: 3
+  fp16: true
+  load_best_model_at_end: true
+  metric_for_best_model: "geo_mean"
+  logging_dir: "./logs"
+  logging_steps: 16

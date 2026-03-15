@@ -1,0 +1,14 @@
+transformers
+torch
+torchvision
+torchaudio
+pandas
+sentencepiece
+evaluate
+sacrebleu
+scikit-learn
+tqdm
+accelerate
+bitsandbytes
+pyyaml
+tensorboard
