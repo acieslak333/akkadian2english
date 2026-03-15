@@ -160,7 +160,14 @@ if __name__ == "__main__":
         src_lang=config['model']['source_lang'], 
         tgt_lang=config['model']['target_lang']
     )
+    
+    # Add special tags to tokenizer
+    special_tokens = ["<<SENTENCE>>", "<<WORD>>"]
+    tokenizer.add_special_tokens({"additional_special_tokens": special_tokens})
+    
     model = AutoModelForSeq2SeqLM.from_pretrained(config['model']['name'])
+    # Resize embeddings for new tokens
+    model.resize_token_embeddings(len(tokenizer))
 
     # Prepare data
     tokenized_train = train_dataset.map(

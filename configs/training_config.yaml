@@ -7,8 +7,8 @@ model:
   max_length: 512
 
 data:
-  train_path: "data/processed/train_cleaned_norm.csv"
-  val_path: "data/processed/val_cleaned_norm.csv"
+  train_path: "datasets/augmented/train.csv"
+  val_path: "datasets/augmented/val.csv"
   output_dir: "./models/nllb_akkadian"
 
 training:
